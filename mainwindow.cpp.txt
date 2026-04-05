@@ -140,8 +140,8 @@ void MainWindow::on_btn_Save_clicked()
         if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
             // 4. Пишем данные в файл
             QTextStream out(&file);
-            out << "Регулярное выражение:\n"<< ui->line_Regex->toPlainText() << "\n";     // 1 строка: регулярка
-            out  << "Анализируемый текст:\n"<< ui->text_Input->toPlainText();       // 2 строка: текст
+            out << ui->line_Regex->toPlainText() << "\n";     // 1 строка: регулярка
+            out << ui->text_Input->toPlainText();       // 2 строка: текст
 
             file.close();
 
@@ -205,8 +205,8 @@ void MainWindow::on_btn_Help_clicked()
 {
     QString helpText = " Инструкция:\n\n";
     helpText += " Вы можете: \n";
-    helpText += " - загрузить готовый тестовый файл формата (*txt)\n";
-    helpText += " - загрузить ранее сохраненный тестер для продолжения работы\n";
+    helpText += " - загрузить готовый тестовый файл формата (*txt).\n";
+    helpText += " - загрузить ранее сохраненный тестер для продолжения работы.\n";
     helpText += " - сохранить результат текущей работы\n\n";
 
     // Создаем окно сообщения
