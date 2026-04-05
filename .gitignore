@@ -1,0 +1,13 @@
+# Папки сборки
+build/
+debug/
+release/
+*.o
+*.obj
+
+# Файлы Qt Creator
+*.user
+*.pro.user
+
+# Временные файлы
+Makefile
