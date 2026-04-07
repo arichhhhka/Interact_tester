@@ -1,21 +1,19 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QStyleHints>
+#include <QFileDialog>
+#include <QMessageBox>
+#include <QTextStream>
 
-#include <QStyleHints> // Для определения темы системы
-#include <QFileDialog> // Для диалогов выбора файлов
-#include <QMessageBox> // Для окон с сообщениями
-#include <QRegularExpression> // Для работы с регулярными выражениями
-#include <QTextStream> // Для работы с цветами
-
+// Конструктор главного окна
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    // Проверка настройки системы ( темная/светлая тема)
+    // Определение темы оформления системы (светлая или темная)
     bool isDarkTheme = false;
-
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
     QStyleHints *styleHints = qApp->styleHints();
     if (styleHints->colorScheme() == Qt::ColorScheme::Dark) {
@@ -23,16 +21,16 @@ MainWindow::MainWindow(QWidget *parent)
     }
 #endif
 
-    // Применение стилей
+    // Применение цветовой схемы в зависимости от темы системы
     if (isDarkTheme) {
-        // Для темной темы
+        // Настройки для темной темы
         this->setStyleSheet("background-color: #2b2b2b;");
         ui->line_Regex->setStyleSheet("background-color: #3c3f41; color: white;");
         ui->text_Input->setStyleSheet("background-color: #3c3f41; color: white;");
         ui->text_Result->setStyleSheet("background-color: #3c3f41; color: white;");
         ui->btn_Check->setStyleSheet("background-color: #bb86fc; color: black;");
     } else {
-        // Для светлой темы
+        // Настройки для светлой темы
         this->setStyleSheet("background-color: #fce4ec;");
         ui->line_Regex->setStyleSheet("background-color: #f5f5f5; color: black;");
         ui->text_Input->setStyleSheet("background-color: #f5f5f5; color: black;");
@@ -40,205 +38,163 @@ MainWindow::MainWindow(QWidget *parent)
         ui->btn_Check->setStyleSheet("background-color: #e0e0e0; color: black;");
     }
 
+    // Применяем стиль кнопки проверки ко всем остальным кнопкам для единообразия
     ui->btn_Load->setStyleSheet(ui->btn_Check->styleSheet());
     ui->btn_Save->setStyleSheet(ui->btn_Check->styleSheet());
     ui->btn_Help->setStyleSheet(ui->btn_Check->styleSheet());
     ui->btn_Clear->setStyleSheet(ui->btn_Check->styleSheet());
 }
 
+// Деструктор окна
 MainWindow::~MainWindow()
 {
     delete ui;
 }
 
-void MainWindow::on_btn_Check_clicked() // Слот для кнопки Проверить
+// Обработчик нажатия кнопки "Проверить"
+void MainWindow::on_btn_Check_clicked()
 {
-    // Получает регулярное выражение и текст
     QString pattern = ui->line_Regex->toPlainText();
     QString text = ui->text_Input->toPlainText();
 
-    // Проверяет, не пустое ли регулярное выражение
+    // Проверка на пустое регулярное выражение
     if (pattern.isEmpty()) {
-        ui->text_Result->setPlainText(" Введите регулярное выражение!");
+        ui->text_Result->setPlainText("Введите регулярное выражение!");
         return;
     }
 
-    // Создает объект регулярного выражения
-    QRegularExpression re(pattern);
+    // Вызов метода поиска из вынесенного класса RegexEngine
+    RegexResult result = m_regexEngine.test(pattern, text);
 
-    // Проверяет ошибки в самом выражении
-    if (!re.isValid()) {
-        QString errorText = "Ошибка в регулярном выражении!\n\n";
+    // Обработка синтаксических ошибок регулярного выражения
+    if (!result.isValid) {
+        QString errorText = "Ошибка в регулярном выражении!\n";
         errorText += "Возможные причины:\n";
         errorText += " - незакрытая скобка или кавычка\n";
         errorText += " - неправильный спецсимвол\n";
-        errorText += " - пустое выражение в скобках\n\n";
-        errorText += "Техническая информация:\n" + re.errorString();
-
+        errorText += "Техническая информация:\n" + result.error;
         ui->text_Result->setPlainText(errorText);
         return;
     }
 
-    // Очищает старую подсветку в тексте
+    // Сброс предыдущей подсветки текста
     ui->text_Input->setExtraSelections({});
-
-    // Посик всех совпадений в тексте
-    auto matchIterator = re.globalMatch(text);
     QList<QTextEdit::ExtraSelection> highlights;
     int count = 0;
     QString foundList;
 
-    while (matchIterator.hasNext()) {
-        auto match = matchIterator.next();
-        int start = match.capturedStart();
-        int length = match.capturedLength();
-
-        // Создает выделение для найденного совпадения
+    // Перебор найденных совпадений с помощью цикла for
+    // Данные уже собраны в список result.matches, поэтому используем стандартный перебор
+    for (const auto& match : result.matches) {
         QTextEdit::ExtraSelection selection;
         selection.cursor = ui->text_Input->textCursor();
-        selection.cursor.setPosition(start);
-        selection.cursor.setPosition(start + length, QTextCursor::KeepAnchor);
+        selection.cursor.setPosition(match.start);
+        // Выделяем найденный фрагмент текста
+        selection.cursor.setPosition(match.start + match.length, QTextCursor::KeepAnchor);
 
-        // Задает цвет подсветки
+        // Настройка визуального оформления выделения
         selection.format.setBackground(QColor("#e0e0e0"));
         selection.format.setForeground(QColor("#000000"));
         selection.format.setFontWeight(QFont::Bold);
-
         highlights.append(selection);
 
-        // Добавляет в список найденного
-        foundList += QString("%1. \"%2\"\n")
-                         .arg(++count)
-                         .arg(match.captured());
+        // Формируем строку со списком найденных значений
+        foundList += QString("%1. \"%2\"\n").arg(++count).arg(match.text);
     }
 
-    // Применяет подсветку к полю ввода
+    // Применяем выделения к текстовому полю
     ui->text_Input->setExtraSelections(highlights);
 
-    // 11. Выводим результат
+    // Вывод результата поиска
     if (count == 0) {
         ui->text_Result->setPlainText("Совпадений не найдено.");
     } else {
-        ui->text_Result->setPlainText(QString(" Найдено совпадений: %1\n\n%2")
-                                          .arg(count)
-                                          .arg(foundList));
+        ui->text_Result->setPlainText(QString("Найдено совпадений: %1\n%2")
+                                          .arg(count).arg(foundList));
     }
 }
 
-
-
+// Обработчик нажатия кнопки "Сохранить"
 void MainWindow::on_btn_Save_clicked()
 {
-    // Открываем диалог сохранения файла
-    QString fileName = QFileDialog::getSaveFileName(this,
-                                                    tr("Сохранить тест"), "", tr("Файлы тестов (*.test);;Все файлы (*)"));
-
-    // Если пользователь не нажал "Отмена"
+    // Открытие диалога выбора пути для сохранения файла
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Сохранить тест"), "", tr("Файлы тестов (*.test);;Все файлы (*)"));
     if (!fileName.isEmpty()) {
-        // 3. Создаем файл для записи
         QFile file(fileName);
+        // Открываем файл в режиме записи
         if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-            // 4. Пишем данные в файл
             QTextStream out(&file);
-            out << "Регулярное выражение:\n"<< ui->line_Regex->toPlainText() << "\n";     // 1 строка: регулярка
-            out  << "Анализируемый текст:\n"<< ui->text_Input->toPlainText();       // 2 строка: текст
-
+            // Записываем регулярное выражение в первую строку
+            out << ui->line_Regex->toPlainText() << "\n";
+            // Записываем тестируемый текст
+            out << ui->text_Input->toPlainText();
             file.close();
-
-            ui->text_Result->setPlainText(" Тест сохранён в файл:\n" + fileName);
+            ui->text_Result->setPlainText("Тест сохранён в файл:\n" + fileName);
         } else {
-            ui->text_Result->setPlainText(" Не удалось сохранить файл!");
+            ui->text_Result->setPlainText("Не удалось сохранить файл!");
         }
     }
 }
 
-
-
-
-
+// Обработчик нажатия кнопки "Загрузить"
 void MainWindow::on_btn_Load_clicked()
 {
-    // 1. Открываем диалог выбора файла
-    QString fileName = QFileDialog::getOpenFileName(this,
-                                                    tr("Загрузить файл"), "",
-                                                    tr("Все файлы (*.txt *.test);;Текстовые файлы (*.txt);;Файлы тестов (*.test)"));
+    // Открытие диалога выбора файла
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Загрузить файл"), "", tr("Все файлы (*.txt *.test);;Текстовые файлы (*.txt);;Файлы тестов (*.test)"));
+    if (fileName.isEmpty()) return;
 
-    // 2. Если файл выбран
-    if (fileName.isEmpty()) {
-        return;
-    }
-
-    // 3. Открываем файл
     QFile file(fileName);
+    // Проверка успешности открытия файла
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         ui->text_Result->setPlainText("Не удалось открыть файл!");
         return;
     }
 
     QTextStream in(&file);
-
-    // 4. Определяем тип файла по расширению
+    // Разная логика загрузки в зависимости от расширения файла
     if (fileName.endsWith(".test")) {
-        // Это файл ТЕСТА — загружаем регулярку и текст
-        QString pattern = in.readLine();        // Первая строка — регулярка
-        QString text = in.readAll();            // Остальное — текст
-
+        // Для файлов теста: первая строка - регулярка, остальное - текст
+        QString pattern = in.readLine();
+        QString text = in.readAll();
         ui->line_Regex->setPlainText(pattern);
         ui->text_Input->setPlainText(text);
-
         ui->text_Result->setPlainText("Загружен тест из файла:\n" + fileName);
-        ui->text_Input->setExtraSelections({}); // Очищаем подсветку
+        ui->text_Input->setExtraSelections({});
     } else {
-        // Это обычный ТЕКСТ — загружаем только текст
+        // Для обычных текстовых файлов загружаем только текст
         QString text = in.readAll();
-
         ui->text_Input->setPlainText(text);
-
-        ui->text_Result->setPlainText(" Загружен текст из файла:\n" + fileName);
+        ui->text_Result->setPlainText("Загружен текст из файла:\n" + fileName);
     }
-
     file.close();
 }
 
-
+// Обработчик нажатия кнопки "Помощь"
 void MainWindow::on_btn_Help_clicked()
 {
-    QString helpText = " Инструкция:\n\n";
-    helpText += " Вы можете: \n";
-    helpText += " - загрузить готовый тестовый файл формата (*txt)\n";
-    helpText += " - загрузить ранее сохраненный тестер для продолжения работы\n";
-    helpText += " - сохранить результат текущей работы\n\n";
+    QString helpText = "Инструкция:\n";
+    helpText += "Вы можете:\n";
+    helpText += " - загрузить готовый тестовый файл формата (*.test)\n";
+    helpText += " - загрузить обычный текстовый файл (*.txt) для поиска\n";
+    helpText += " - сохранить результат текущей работы\n";
 
-    // Создаем окно сообщения
     QMessageBox msgBox;
     msgBox.setIcon(QMessageBox::Information);
     msgBox.setWindowTitle("Помощь");
     msgBox.setText(helpText);
-
-    // ВАЖНО: Сбрасываем стили, чтобы фон был белым (стандартным),
-    // а не наследовал розовый цвет от главного окна
+    // Принудительно задаем белый фон для окна справки, чтобы не наследовался цвет главного окна
     msgBox.setStyleSheet("QMessageBox { background-color: white; }"
                          "QMessageBox QLabel { color: black; font-size: 13px; }");
-
     msgBox.exec();
 }
 
-
+// Обработчик нажатия кнопки "Очистить"
 void MainWindow::on_btn_Clear_clicked()
 {
-    // 1. Очищаем поле регулярного выражения
     ui->line_Regex->clear();
-
-    // 2. Очищаем поле ввода текста
     ui->text_Input->clear();
-
-    // 3. Очищаем поле результатов
     ui->text_Result->clear();
-
-    // 4. Удаляем подсветку (если была)
+    // Убираем подсветку совпадений
     ui->text_Input->setExtraSelections({});
-
-    // 5. Пишем сообщение пользователю
-    ui->text_Result->setPlainText(" Все поля очищены.");
+    ui->text_Result->setPlainText("Все поля очищены.");
 }
-
