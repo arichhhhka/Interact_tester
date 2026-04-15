@@ -34,10 +34,8 @@ RegexResult RegexEngine::test(const QString& pattern, const QString& text)
         return result;
     }
 
-    // Создаём "переборщик" — объект, который будет выдавать нам все найденные совпадения по одному
-    QRegularExpressionMatchIterator it= re.globalMatch(text);
-    while (it.hasNext()) {
-        QRegularExpressionMatch match = it.next();
+    // Ищет совпадение
+   for (const QRegularExpressionMatch& match : re.globalMatch(text)) {
 
         // Формируем структуру с данными о текущем совпадении
         RegexMatch m;
