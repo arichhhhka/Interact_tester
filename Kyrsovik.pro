@@ -1,8 +1,5 @@
-# Подключаем модуль виджетов Qt для построения графического интерфейса
-QT += widgets
-
-# Указываем стандарт C++17 для использования современного синтаксиса
-CONFIG += c++17
+QT += widgets # Подключает модуль для кнопок и окон
+CONFIG += c++17 # Для стандарта C++17
 
 # Исходные файлы проекта
 SOURCES += \
@@ -18,8 +15,3 @@ HEADERS += \
 # Файлы интерфейса (разметка окна)
 FORMS += \
     mainwindow.ui
-
-# Настройки путей установки для разных ОС (стандартный шаблон Qt)
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target

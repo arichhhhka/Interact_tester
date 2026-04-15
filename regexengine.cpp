@@ -1,39 +1,43 @@
 #include "regexengine.h"
 
-// Проверка корректности синтаксиса регулярного выражения
+// Проверка корректности регулярного выражения
 bool RegexEngine::isValid(const QString& pattern) const
 {
-    return QRegularExpression(pattern).isValid();
+    QRegularExpression re(pattern);
+    return re.isValid();
 }
 
-// Получение описания ошибки синтаксиса
+// Получение ошибки
 QString RegexEngine::getError(const QString& pattern) const
 {
     QRegularExpression re(pattern);
     // Если выражение верное, возвращаем пустую строку, иначе - сообщение об ошибке
-    return re.isValid() ? QString() : re.errorString();
+    if (re.isValid()) {
+        return "";
+    } else {
+        return re.errorString();
+    }
 }
 
-// Поиск всех совпадений регулярного выражения в переданном тексте
+// Поиск всех совпадений регулярного выражения в тексте
 RegexResult RegexEngine::test(const QString& pattern, const QString& text)
 {
     RegexResult result;
     QRegularExpression re(pattern);
 
-    // Первичная проверка валидности выражения
+    // Проверяем, правильная ли регулярка
     result.isValid = re.isValid();
     result.error = re.errorString();
 
-    // Если синтаксис неверный, дальнейший поиск не имеет смысла
+    // Если ошибка, дальше не ищем
     if (!result.isValid) {
         return result;
     }
 
-    // Поиск совпадений с помощью итератора Qt
-    // Итератор используется внутри движка для эффективного перебора без лишней нагрузки на память
-    auto matchIterator = re.globalMatch(text);
-    while (matchIterator.hasNext()) {
-        auto match = matchIterator.next();
+    // Создаём "переборщик" — объект, который будет выдавать нам все найденные совпадения по одному
+    QRegularExpressionMatchIterator it= re.globalMatch(text);
+    while (it.hasNext()) {
+        QRegularExpressionMatch match = it.next();
 
         // Формируем структуру с данными о текущем совпадении
         RegexMatch m;

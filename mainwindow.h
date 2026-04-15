@@ -2,9 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "regexengine.h" // Подключаем класс обработки регулярных выражений
+#include "regexengine.h" // Подключение класса обработки регулярных выражений
 
-QT_BEGIN_NAMESPACE
+QT_BEGIN_NAMESPACE // Пространство имён для интерфейса
 namespace Ui {
 class MainWindow;
 }
@@ -17,10 +17,10 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow() override;
+    ~MainWindow() override;  // Деструктор
 
 private slots:
-    // Обработчики нажатий кнопок интерфейса
+    // Слоты для нажатий кнопок интерфейса
     void on_btn_Check_clicked();
     void on_btn_Load_clicked();
     void on_btn_Save_clicked();
@@ -28,8 +28,8 @@ private slots:
     void on_btn_Clear_clicked();
 
 private:
-    Ui::MainWindow *ui;        // Указатель на сгенерированный класс интерфейса
-    RegexEngine m_regexEngine; // Экземпляр движка для обработки регулярных выражений
+    Ui::MainWindow *ui;        // Указатель на элементы интерфейса
+    RegexEngine regex; // Объект для работы с регулярными выражениями
 };
 
 #endif
