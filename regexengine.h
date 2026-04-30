@@ -25,12 +25,6 @@ class RegexEngine
 public:
     RegexEngine() = default; // Констуктор по умолчанию
 
-    // Проверка корректности регулярного выражения
-    bool isValid(const QString& pattern) const;
-
-    // Текст ошибки при неправильном выражении
-    QString getError(const QString& pattern) const;
-
     // Основной метод поиска совпадений в тексте
     RegexResult test(const QString& pattern, const QString& text);
 };

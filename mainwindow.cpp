@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QStyleHints>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QTextStream>
@@ -17,13 +16,13 @@ MainWindow::MainWindow(QWidget *parent)
     ui->line_Regex->setStyleSheet("background-color: #f5f5f5; color: black;");
     ui->text_Input->setStyleSheet("background-color: #f5f5f5; color: black;");
     ui->text_Result->setStyleSheet("background-color: #f5f5f5; color: black;");
-    ui->btn_Check->setStyleSheet("background-color: #e0e0e0; color: black;");
+    QString commonButtonStyle = "background-color: #e0e0e0; color: black;";
 
-    // Одикнаковый стиль для всех остальных кнопок
-    ui->btn_Load->setStyleSheet(ui->btn_Check->styleSheet());
-    ui->btn_Save->setStyleSheet(ui->btn_Check->styleSheet());
-    ui->btn_Help->setStyleSheet(ui->btn_Check->styleSheet());
-    ui->btn_Clear->setStyleSheet(ui->btn_Check->styleSheet());
+    ui->btn_Check->setStyleSheet(commonButtonStyle);
+    ui->btn_Load->setStyleSheet(commonButtonStyle);
+    ui->btn_Save->setStyleSheet(commonButtonStyle);
+    ui->btn_Help->setStyleSheet(commonButtonStyle);
+    ui->btn_Clear->setStyleSheet(commonButtonStyle);
 }
 
 // Деструктор окна (чистим память)

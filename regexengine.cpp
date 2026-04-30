@@ -1,24 +1,5 @@
 #include "regexengine.h"
 
-// Проверка корректности регулярного выражения
-bool RegexEngine::isValid(const QString& pattern) const
-{
-    QRegularExpression re(pattern);
-    return re.isValid();
-}
-
-// Получение ошибки
-QString RegexEngine::getError(const QString& pattern) const
-{
-    QRegularExpression re(pattern);
-    // Если выражение верное, возвращаем пустую строку, иначе - сообщение об ошибке
-    if (re.isValid()) {
-        return "";
-    } else {
-        return re.errorString();
-    }
-}
-
 // Поиск всех совпадений регулярного выражения в тексте
 RegexResult RegexEngine::test(const QString& pattern, const QString& text)
 {
