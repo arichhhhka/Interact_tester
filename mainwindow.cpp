@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->text_Input->setAcceptRichText(false);  // Отключает вставку с форматированием
 
     this->setStyleSheet("background-color: #fce4ec;");
     ui->line_Regex->setStyleSheet("background-color: #f5f5f5; color: black;");
@@ -75,7 +76,7 @@ void MainWindow::on_btn_Check_clicked()
         selection.cursor.setPosition(match.start + match.length, QTextCursor::KeepAnchor);
 
         // Цвет подсветки
-        selection.format.setBackground(QColor("#e0e0e0"));
+        selection.format.setBackground(QColor("#ffeb3b"));
         selection.format.setForeground(QColor("#000000"));
         selection.format.setFontWeight(QFont::Bold);
         highlights.append(selection);
